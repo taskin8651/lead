@@ -18,18 +18,34 @@ class LeadsModuleController extends Controller
 {
     use CsvImportTrait;
 
-   public function index(Request $request)
+  public function index(Request $request)
 {
     abort_if(Gate::denies('leads_module_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
+    $user = auth()->user();
     $query = LeadsModule::query()->with(['assigned_to', 'service']);
 
-    // 🔹 If not admin → show only assigned leads
-    if (!auth()->user()->is_admin) {
-        $query->where('assigned_to_id', auth()->id());
+    // ========================
+    //   ROLE BASED FILTERING
+    // ========================
+
+    // 🔹 SUPER ADMIN (role id = 1)
+    if ($user->roles()->where('id', 3)->exists()) {
+        // No filter → see all leads
+    }
+    // 🔹 ADMIN → Only leads created by him
+    elseif ($user->roles()->where('id', 1)->exists()) {
+        $query->where('created_by_id', $user->id);
+    }
+    // 🔹 TELECALLER / NORMAL USER → Only assigned leads
+    else {
+        $query->where('assigned_to_id', $user->id);
     }
 
-    // 🔹 Quick Filter
+    // ========================
+    //       OTHER FILTERS
+    // ========================
+
     if ($request->filter_type) {
         if ($request->filter_type == 'today') {
             $query->whereDate('created_at', today());
@@ -44,7 +60,6 @@ class LeadsModuleController extends Controller
         }
     }
 
-    // 🔹 Custom Date Range
     if ($request->from_date && $request->to_date) {
         $query->whereBetween('created_at', [
             $request->from_date . ' 00:00:00',
@@ -52,7 +67,6 @@ class LeadsModuleController extends Controller
         ]);
     }
 
-    // 🔹 Status Filter
     if ($request->status) {
         $query->where('status', $request->status);
     }

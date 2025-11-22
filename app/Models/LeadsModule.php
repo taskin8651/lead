@@ -43,6 +43,7 @@ class LeadsModule extends Model
         'created_at',
         'updated_at',
         'deleted_at',
+        'created_by_id',
     ];
 
     protected function serializeDate(DateTimeInterface $date)
@@ -68,5 +69,9 @@ class LeadsModule extends Model
     public function service()
     {
         return $this->belongsTo(Service::class, 'service_id');
+    }
+     public function users()
+    {
+        return $this->belongsTo(User::class, 'created_by_id');
     }
 }

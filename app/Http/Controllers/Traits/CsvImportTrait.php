@@ -51,6 +51,8 @@ trait CsvImportTrait
 
                     // ⭐️ FIX STATUS SAVING
                     $record['status'] = $request->status ?? 'new';
+                    // ⭐ Add created_by_id (Logged-in user)
+                $record['created_by_id'] = auth()->id();
 
                     // Save to DB
                     $modelPath::create($record);

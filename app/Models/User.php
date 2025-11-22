@@ -41,6 +41,7 @@ class User extends Authenticatable
         'created_at',
         'updated_at',
         'deleted_at',
+        'created_by_id',
     ];
 
     protected function serializeDate(DateTimeInterface $date)
@@ -89,5 +90,10 @@ class User extends Authenticatable
     public function roles()
     {
         return $this->belongsToMany(Role::class);
+    }
+
+     public function users()
+    {
+        return $this->belongsTo(User::class, 'created_by_id');
     }
 }

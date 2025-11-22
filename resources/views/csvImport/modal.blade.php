@@ -16,16 +16,28 @@
 
                     {{ csrf_field() }}
 
-                    {{-- Assign To --}}
-                    <div class="form-group">
-                        <label>Assign To</label>
-                        <select name="assigned_to_id" class="form-control" required>
-                            <option value="">Select Telecaller</option>
-                            @foreach(\App\Models\User::all() as $user)
-                                <option value="{{ $user->id }}">{{ $user->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                 @php
+    $currentUser = auth()->user();
+
+    // SUPER ADMIN (role id = 1)
+    $isSuperAdmin = $currentUser->roles()->where('id', 3)->exists();
+
+    if ($isSuperAdmin) {
+        // Super admin → all users
+        $users = \App\Models\User::all();
+    } else {
+        // Admin → only users created by this admin
+        $users = \App\Models\User::where('created_by_id', $currentUser->id)->get();
+    }
+@endphp
+
+<select name="assigned_to_id" class="form-control" required>
+    <option value="">Select Telecaller</option>
+    @foreach($users as $user)
+        <option value="{{ $user->id }}">{{ $user->name }}</option>
+    @endforeach
+</select>
+
 
                     {{-- Service --}}
                     <div class="form-group">
